@@ -64,9 +64,30 @@ def lem_frequency_count(series, stop_words, do_not_lem=[]):
     return counter
 
 
+def bigram_count(series, stop_words, do_not_lem=[]):
+    counter = nltk.FreqDist()
+    wnl = WordNetLemmatizer()
+    for r in series:
+        word_list = [w.casefold() for w in word_tokenize(r) if w.casefold() not in stop_words]  # remove stopwords
+        word_list = [w for w in word_list if w.isalpha()]  # keep only words made of letters
+        word_list = [wnl.lemmatize(w) if w not in do_not_lem else w for w in word_list]  # lemmatize
+        bgs = nltk.bigrams(word_list)  # convert word_list to bigrams
+        counter.update(bgs)
+    return counter
 
-if __name__ == "__main__":
-    ER_app_id = 1245620
-    miku_app_id = 1761390  # for testing how the end of cursor behaves
 
-    print(get_reviews(miku_app_id, 3))
+def extract_features(df):
+    feature_list = []
+    classification_dict = {True: "pos",
+                           False: "neg"}
+
+    for row in df.itertuples():
+        features = {"vader_compound": row.vader_compound,
+                    "vader_positive": row.vader_pos,
+                    "playtime": row.playtime_at_review}
+
+        classification = classification_dict[row.voted_up]
+
+        feature_list.append((features, classification))
+
+    return feature_list
